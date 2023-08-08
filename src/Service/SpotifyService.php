@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -45,6 +46,29 @@ class SpotifyService
             // Returning access token from Spotify API response
             return $data->access_token;
         });
+
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function searchTrack(string $search) : array
+    {
+        // Creating client to request Spotify API
+        $client = new \GuzzleHttp\Client();
+
+        // Requesting tracks from Spotify API with search term
+        $response = $client->get(
+            uri: 'https://api.spotify.com/v1/search?type=track&q=' . urlencode($search),
+            options: [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->accessToken,
+                ]
+            ]
+        );
+
+        // Returning tracks list from Spotify API response as array
+        return json_decode($response->getBody()->getContents())->tracks->items;
 
     }
 
